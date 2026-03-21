@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 import sessionModel from "../model/userSession.model.js";
 import crypto from "crypto"
+import { log } from "console";
+import { decode } from "punycode";
 
 
 /**
@@ -105,6 +107,67 @@ export async function registerUser(req, res) {
   }
 }
 
+/**
+ * To generate new access token from refresh token
+ */
+
+export async function refreshToken(req,res) {
+  const refreshToken = req.cookies.refreshToken
+
+  if(!refreshToken){
+    return res.status(401).json({
+      message: "Refresh token is not found"
+    })
+  }
+
+  const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET)
+  
+  if(!decoded){
+    return res.status(404).json({
+      message:"Invalid Token "
+    })
+  }
+
+  const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex")
+
+  // It allow only to login user, if user is logout then it will direct return from here
+  const session = await sessionModel.findOne({
+    refreshTokenHash, 
+    revoked : false     // return login user not logout
+  })
+
+  if(!session){
+    return res.status(401).json({ message: "Invalid refresh token" })
+  }
+
+  const accessToken = jwt.sign({
+    id: decoded.id,
+    sessionId: session._id
+  },config.ACCESS_TOKEN_SECRET, {expiresIn: "15m"})
+  
+  const newRefreshToken = jwt.sign({
+      id: decoded.id 
+    },config.REFRESH_TOKEN_SECRET,{ expiresIn : "7d" })
+
+  const  newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex")
+
+  session.refreshTokenHash = newRefreshTokenHash
+  await session.save()
+  
+  res.cookie("refreshToken", newRefreshToken,{
+    httpOnly:true,
+    // secure:true,
+    // sameSite: "strict",
+    maxAge: 7*24*60*60*1000         // 7days
+  })
+
+  res.status(200).json({
+    message: "Access Token refreshed successful",
+    accessToken
+  })
+
+}
+
 
 /**
  * To login a user
@@ -197,6 +260,10 @@ export async function login(req,res){
   
 }
 
+/**
+ * To logout from current (one) device
+ */
+
 export async function logOut(req,res) {
 
   const refreshToken = req.cookies.refreshToken
@@ -232,6 +299,9 @@ export async function logOut(req,res) {
 
 }
 
+/**
+ * To logout from all devices 
+ */
 
 export async function logoutAll(req,res) {
   const refreshToken = req.cookies.refreshToken

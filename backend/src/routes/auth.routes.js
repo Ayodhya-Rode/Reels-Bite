@@ -13,6 +13,8 @@ router.post("/user/register", authController.registerUser);
  * POST /api/auth/user/login
  */
 
+router.get("/user/refresh-token", authController.refreshToken)
+
 router.post("/user/login", authController.login)
 
 router.post("/user/logout", authController.logOut)
