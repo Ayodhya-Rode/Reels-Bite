@@ -10,14 +10,26 @@ const router = express.Router();
 router.post("/user/register", authController.registerUser);
 
 /**
- * POST /api/auth/user/login
+ * GET - /api/auth/user/refresh-token
  */
 
 router.get("/user/refresh-token", authController.refreshToken)
 
+/**
+ * POST /api/auth/user/login
+ */
+
 router.post("/user/login", authController.login)
 
+/**
+ * POST /api/auth/user/logout
+ */
+
 router.post("/user/logout", authController.logOut)
+
+/**
+ * POST /api/auth/user/logout-all
+ */
 
 router.post("/user/logout-all", authController.logoutAll)
 
