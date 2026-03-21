@@ -42,6 +42,18 @@ export async function registerUser(req, res) {
       password: hashedPassword,
     });
 
+    const activeSessionsCount = await sessionModel.countDocuments({
+      user: user._id,
+        revoked: false
+      });
+
+      if (activeSessionsCount >= 4) {
+          return res.status(403).json({
+          message: "Maximum device limit reached (4). Logout from another device first."
+       });
+      }
+
+
     const refreshToken = jwt.sign(
       {
         id: user._id,
@@ -118,6 +130,17 @@ export async function login(req,res){
    
     if(!isValidPassword){
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const activeSessionsCount = await sessionModel.countDocuments({
+      user: user._id,
+      revoked: false
+    });
+
+    if (activeSessionsCount >= 4) {
+      return res.status(403).json({
+        message: "Maximum device limit reached (4). Logout from another device first."
+      });
     }
     
     const refreshToken = jwt.sign(
