@@ -2,6 +2,9 @@ import userModel from "../model/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
+import sessionModel from "../model/userSession.model.js";
+import crypto from "crypto"
+
 
 /**
  * To regiter new user
@@ -47,9 +50,21 @@ export async function registerUser(req, res) {
       { expiresIn: "7d" },
     );
 
+    const hashedRefrshToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
+
+    //  creating new session for user
+
+    const session = await sessionModel.create({
+      user:user._id,
+      refreshTokenHash: hashedRefrshToken,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"]
+    })
+
     const accessToken = jwt.sign(
       {
         id: user._id,
+        sessionId : session._id
       },
       config.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" },
@@ -63,7 +78,7 @@ export async function registerUser(req, res) {
     });
 
     return res.status(201).json({
-      message: "User registered successfully",
+      message: "User Created successfully",
       user: {
         fullName: fullName.trim() ,
         email: normalizedEmail,
@@ -71,8 +86,10 @@ export async function registerUser(req, res) {
       },
       accessToken
     });
+
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Internal server error"});
   }
 }
 
@@ -111,9 +128,21 @@ export async function login(req,res){
       { expiresIn: "7d" },
     );
 
+    const hashedRefrshToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
+
+    //  creating new session for user
+
+    const session = await sessionModel.create({
+      user:user._id,
+      refreshTokenHash: hashedRefrshToken,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"]
+    })
+
     const accessToken = jwt.sign(
       {
         id: user._id,
+        sessionId : session._id
       },
       config.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" },
@@ -139,7 +168,68 @@ export async function login(req,res){
 
   } 
   catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Internal server error"});
   }
   
 }
+
+export async function logOut(req,res) {
+
+  const refreshToken = req.cookies.refreshToken
+
+  if(!refreshToken) {
+      return res.status(400).json({
+          message: "Refresh token is not found"
+      })
+  }
+
+  const hashedRefrshToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
+
+
+  const session = await sessionModel.findOne({
+    refreshTokenHash : hashedRefrshToken,
+    revoked: false
+  })
+
+  if(!session) {
+    return res.status(400).json({
+        message: " Invalid refresh token"
+    })
+  }
+
+  session.revoked = true;
+  await session.save()
+
+  res.clearCookie("refreshToken")
+
+  return  res.status(200).json({
+      message: "Logged out successfully !"
+  })
+
+}
+
+
+export async function logoutAll(req,res) {
+  const refreshToken = req.cookies.refreshToken
+
+  if(!refreshToken) {
+    return res.status(400).json({
+        message: "Refresh token is not found"
+    })
+  }
+
+  const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET)
+
+  await sessionModel.updateMany({
+    user: decoded.id,
+    revoked: false
+  },{revoked: true})
+
+  res.clearCookie("refreshToken")
+
+  return res.status(200).json({
+    message: "Logout all devices successfully!"
+  })
+}
+

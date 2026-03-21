@@ -15,5 +15,8 @@ router.post("/user/register", authController.registerUser);
 
 router.post("/user/login", authController.login)
 
+router.post("/user/logout", authController.logOut)
+
+router.post("/user/logout-all", authController.logoutAll)
 
 export default router;  
