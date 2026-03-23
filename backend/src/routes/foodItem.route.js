@@ -1,4 +1,4 @@
-import { authFoodPartnerMiddleware } from "../middlewares/auth.foodPartner.middleware.js"
+ import * as authMiddleware from "../middlewares/auth.middleware.js"
 import * as foodItem from "../controllers/foodItem.controller.js"
 import multer from "multer"
 
@@ -18,8 +18,16 @@ const upload = multer({
 
 /**
  * POST /api/food/create-food/[protected]
+ * only for food partner - applied authFoodPartnerMiddleware
  */
 
-router.post("/",authFoodPartnerMiddleware, upload.single("video") ,foodItem.createFood)
+router.post("/",authMiddleware.authFoodPartnerMiddleware, upload.single("video") ,foodItem.createFood)
+
+/**
+ * GET  /api/food/[protected]
+ * only for user to see the food items - 
+ */
+router.get("/", authMiddleware.authUserMiddleware, foodItem.getAllFoodItems)
+
 
 export default router
