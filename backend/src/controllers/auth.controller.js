@@ -11,12 +11,17 @@ import crypto from "crypto";
 
 export async function registerUser(req, res) {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, phoneNumber } = req.body;
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    if (!fullName || !normalizedEmail || !password) {
+    if (!fullName || !normalizedEmail || !password ||!phoneNumber) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+    const phoneRegex = /^[6-9]\d{9}$/;
+    
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({ message: "Invalid phone number format" });
     }
 
     if (password.length < 6) {
@@ -39,6 +44,7 @@ export async function registerUser(req, res) {
       fullName: fullName.trim(),
       email: normalizedEmail,
       password: hashedPassword,
+      phoneNumber: phoneNumber.trim(),
     });
 
     const activeSessionsCount = await sessionModel.countDocuments({
@@ -94,9 +100,10 @@ export async function registerUser(req, res) {
     return res.status(201).json({
       message: "User Created successfully",
       user: {
+        _id: user.id,
         fullName: fullName.trim(),
         email: normalizedEmail,
-        _id: user.id,
+        phoneNumber: user.phoneNumber, 
       },
       accessToken,
     });

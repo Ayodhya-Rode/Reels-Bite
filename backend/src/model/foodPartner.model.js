@@ -1,13 +1,22 @@
 import mongoose from "mongoose";
 
 const foofPartnerSchema = new mongoose.Schema({
-    name : {
+    restaurantName : {
         type: String,
-        require: true
+        required: true
+    },
+    phoneNumber: {
+        type: String,
+        required: true,
+        match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit phone number"]
+    },
+    address:{
+        type: String,
+        required: true
     },
     email: {
         type: String,
-        require: true,
+        required: true,
         unique: true,
         lowercase: true,
         trim: true,

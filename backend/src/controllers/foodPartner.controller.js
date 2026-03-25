@@ -1,73 +1,72 @@
 import foodPartnerModel from "../model/foodPartner.model.js";
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
-import config from "../config/config.js"
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import config from "../config/config.js";
 
 /**
  * To register a new FoodPartner
  */
-
 export async function registerFoodPartner(req, res) {
   try {
-    const {name, email, password } = req.body;
+    const { restaurantName, email, password, phoneNumber, address } = req.body;
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    if (!name || !normalizedEmail || !password) {
+    if (!restaurantName || !normalizedEmail || !password || !phoneNumber || !address) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters long" });
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
-    const isUserAlreadyExists = await foodPartnerModel.findOne({
-      email: normalizedEmail,
-    });
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({ message: "Invalid phone number format" });
+    }
 
+    const isUserAlreadyExists = await foodPartnerModel.findOne({ email: normalizedEmail });
     if (isUserAlreadyExists) {
-      return res.status(409).json({ message: "FoodPartner is already exists" });
+      return res.status(409).json({ message: "FoodPartner already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const foodPartner = await foodPartnerModel.create({
-      name: name.trim(),
+      restaurantName: restaurantName.trim(),
       email: normalizedEmail,
       password: hashedPassword,
+      phoneNumber: phoneNumber.trim(),
+      address: address.trim(),
     });
 
     const refreshToken = jwt.sign(
-      {
-        id: foodPartner._id,
-      },
+      { id: foodPartner._id },
       config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     const accessToken = jwt.sign(
-      {
-        id: foodPartner._id,
-      },
+      { id: foodPartner._id },
       config.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, //now only for dev it is false, but it always true in production
+      secure: false, // production मध्ये true ठेव
       sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
-      message: "FoodPartner Created successfully",
+      message: "FoodPartner created successfully",
       foodPartner: {
-        name: name.trim(),
-        email: normalizedEmail,
         _id: foodPartner.id,
+        restaurantName: foodPartner.restaurantName,
+        email: foodPartner.email,
+        phoneNumber: foodPartner.phoneNumber,
+        address: foodPartner.address,
       },
       accessToken,
     });
@@ -83,7 +82,6 @@ export async function registerFoodPartner(req, res) {
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
-
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!normalizedEmail || !password) {
@@ -91,36 +89,30 @@ export async function login(req, res) {
     }
 
     const foodPartner = await foodPartnerModel.findOne({ email: normalizedEmail });
-
     if (!foodPartner) {
       return res.status(404).json({ message: "Invalid credentials" });
     }
 
     const isValidPassword = await bcrypt.compare(password, foodPartner.password);
-
     if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const refreshToken = jwt.sign(
-      {
-        id: foodPartner._id,
-      },
+      { id: foodPartner._id },
       config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     const accessToken = jwt.sign(
-      {
-        id: foodPartner._id,
-      },
+      { id: foodPartner._id },
       config.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, //now only for dev it is false, but it always true in production
+      secure: false,
       sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -130,7 +122,9 @@ export async function login(req, res) {
       user: {
         _id: foodPartner.id,
         email: foodPartner.email,
-        name: foodPartner.name,
+        restaurantName: foodPartner.restaurantName, // ✅ updated field
+        phoneNumber: foodPartner.phoneNumber,
+        address: foodPartner.address,
       },
       accessToken,
     });
@@ -143,19 +137,14 @@ export async function login(req, res) {
 /**
  * To logout food partner
  */
-
 export async function logOut(req, res) {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.status(400).json({
-      message: "Refresh token is not found",
-    });
+    return res.status(400).json({ message: "Refresh token is not found" });
   }
 
   res.clearCookie("refreshToken");
 
-  return res.status(200).json({
-    message: "Logged out successfully !",
-  });
+  return res.status(200).json({ message: "Logged out successfully!" });
 }
