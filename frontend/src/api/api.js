@@ -5,7 +5,7 @@ const api = axios.create({
   withCredentials: true, // refresh token cookie allow
 });
 
-// Access token सेट करण्यासाठी helper
+// to set access token in headers for authenticated requests
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -18,22 +18,32 @@ export const setAuthToken = (token) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response && error.response.status === 401) {
+    const originalRequest = error.config; // 👈 define here
+
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; // ekach attempt
+
       try {
-        const res = await api.get("/auth/user/refresh-token");
+        const res = await api.get("/auth/user/refresh-token", { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
-        // नवीन token सेट कर
+        // set new access token in headers
         setAuthToken(newAccessToken);
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
-        // मूळ request पुन्हा चालव
-        error.config.headers["Authorization"] = `Bearer ${newAccessToken}`;
-        return api(error.config);
+        // retry original request
+        return api(originalRequest);
       } catch (refreshError) {
         console.error("Refresh failed:", refreshError);
-        // logout किंवा redirect logic इथे
+
+        // clear token and redirect
+        setAuthToken(null);
+        window.location.href = "/login";
+
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

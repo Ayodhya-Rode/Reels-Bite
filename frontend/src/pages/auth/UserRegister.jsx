@@ -1,32 +1,32 @@
 import "../../styles/theme.css";
 import "../../styles/auth.css";
-import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form"
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import api, { setAuthToken } from "../../api/api";
+import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
+
+
 
 const UserRegister = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
+  const navigate = useNavigate();
+
   const onSubmit = async (data) => {
-  try {
-    const res = await api.post(
-      "/auth/user/register",
-      data,
-      { withCredentials: true } // cookie allow 
-    );
+    try {
+      const res = await api.post("/auth/user/register", data, { withCredentials: true });
+      const accessToken = res.data.accessToken;
+      setAuthToken(accessToken);
 
-    // Access token will return in response 
-    const accessToken = res.data.accessToken;
-    console.log("Access Token:", accessToken);
+       toast.success("Account created successfully 🎉");
 
-    // use access token for future authenticated requests
-   
-    setAuthToken(accessToken);
-  } catch (err) {
-    console.error("Registration error:", err);
-  }
-};
-
+      // redirect after successful registration
+      navigate("/feed");
+    } catch (err) {
+      console.error("Registration error:", err);
+    }
+  };
 
   return (
     <div className="auth-container">
@@ -34,24 +34,44 @@ const UserRegister = () => {
         <div className="auth-form-wrapper">
           <div className="auth-header">
             <h1>Join Reels Bite</h1>
-            <p>Create your profile and start sharing bites of fun</p>
+            <p>Create your profile and start sharing bites of fun !</p>
+             
+              
+<div className="auth-switch">
+  <span>Switch as :</span>
+  <NavLink
+    to="/user/register"
+    className={({ isActive }) =>
+      isActive ? "switch-link active" : "switch-link"
+    }
+  >
+    User
+  </NavLink>
+  <span>·</span>
+  <NavLink
+    to="/food-partner/register"
+    className={({ isActive }) =>
+      isActive ? "switch-link active" : "switch-link"
+    }
+  >
+    Food Partner
+  </NavLink>
+</div>
+
+
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Full Name Field */}
             <div className="form-group">
               <label htmlFor="fullName">Full Name</label>
-
               <input
                 type="text"
                 id="fullName"
-                name="fullName"
                 placeholder="John Doe"
-                required
-                {...register("fullName")}
+                {...register("fullName", { required: "Full name is required" })}
               />
-               {errors.fullName && <span>Full name is required</span>}
-
+              {errors.fullName && <span className="error-message">{errors.fullName.message}</span>}
             </div>
 
             {/* Email Field */}
@@ -60,12 +80,10 @@ const UserRegister = () => {
               <input
                 type="email"
                 id="email"
-                name="email"
                 placeholder="you@example.com"
-                {...register("email")}
-                required
+                {...register("email", { required: "Email is required" })}
               />
-               {errors.email && <span>Email is required</span>}
+              {errors.email && <span className="error-message">{errors.email.message}</span>}
             </div>
 
             {/* Phone Field */}
@@ -74,13 +92,10 @@ const UserRegister = () => {
               <input
                 type="tel"
                 id="phone"
-                name="phoneNumber"
                 placeholder="0000000000"
-                {...register("phoneNumber")}
-                required
+                {...register("phoneNumber", { required: "Phone number is required" })}
               />
-               {errors.phoneNumber && <span>Phone number is required</span>}
-
+              {errors.phoneNumber && <span className="error-message">{errors.phoneNumber.message}</span>}
             </div>
 
             {/* Password Field */}
@@ -89,12 +104,10 @@ const UserRegister = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
                 placeholder="••••••••"
-                {...register("password")}
-                required
+                {...register("password", { required: "Password is required" })}
               />
-                {errors.password && <span>Password is required</span>}
+              {errors.password && <span className="error-message">{errors.password.message}</span>}
             </div>
 
             {/* Submit Button */}
@@ -102,24 +115,6 @@ const UserRegister = () => {
               Create Account
             </button>
           </form>
-
-          {/* Divider */}
-          {/* <div className="auth-divider">
-            <span>or</span>
-          </div> */}
-
-          {/* Social Auth */}
-          {/* <div className="social-auth">
-            <button className="social-btn" title="Sign up with Google">
-              🔵
-            </button>
-            <button className="social-btn" title="Sign up with Apple">
-              🍎
-            </button>
-            <button className="social-btn" title="Sign up with Facebook">
-              📘
-            </button>
-          </div> */}
 
           {/* Login Link */}
           <div className="auth-alternative">
@@ -135,6 +130,9 @@ const UserRegister = () => {
               Sign In
             </Link>
           </div>
+
+      
+
         </div>
       </div>
     </div>
