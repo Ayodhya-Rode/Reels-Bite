@@ -1,10 +1,38 @@
 
 import '../../styles/theme.css'
 import '../../styles/auth.css'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import api, { setAuthToken } from "../../api/api";
+import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
+
+
+
 
 const FoodPartnerRegister = () => {
+
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+  const navigate = useNavigate();
+
   
+  const onSubmit = async (data) => {
+    try {
+      const res = await api.post("/auth/food-partner/register", data, { withCredentials: true });
+      const accessToken = res.data.accessToken;
+      setAuthToken(accessToken);
+
+      // redirect after successful registration
+      navigate("/create-food-post");
+       toast.success("Restaurant registered successfully 🎉");
+
+    } catch (err) {
+      console.error("Registration error:", err);
+    }
+  };
+
+
   return (
     <div className="auth-container">
       <div className="auth-right">
@@ -13,9 +41,32 @@ const FoodPartnerRegister = () => {
             <h1>Expand Your Reach</h1>
             <p>Expand your reach by connecting with hungry customers</p>
 
+              {/* Role Switch */}
+                            
+                  <div className="auth-switch">
+                    <span>Switch as :</span>
+                    <NavLink
+                      to="/user/register"
+                      className={({ isActive }) =>
+                        isActive ? "switch-link active" : "switch-link"
+                      }
+                    >
+                      User
+                    </NavLink>
+                    <span>·</span>
+                    <NavLink
+                      to="/food-partner/register"
+                      className={({ isActive }) =>
+                        isActive ? "switch-link active" : "switch-link"
+                      }
+                    >
+                      Food Partner
+                    </NavLink>
+                  </div>
+             
           </div>
 
-          <form className="auth-form" >
+          <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Restaurant Name */}
             <div className="form-group">
               <label htmlFor="restaurantName">Restaurant Name</label>
@@ -24,9 +75,11 @@ const FoodPartnerRegister = () => {
                 id="restaurantName"
                 name="restaurantName"
                 placeholder="Your Restaurant Name"
-          
-                required
+                 {...register("restaurantName", { required: "Restaurant name is required" })}
+             
               />
+              {errors.restaurantName && <span className="error-message">{errors.restaurantName.message}</span>}
+
             </div>
 
             {/* Email Field */}
@@ -37,8 +90,10 @@ const FoodPartnerRegister = () => {
                 id="email"
                 name="email"
                 placeholder="you@restaurant.com"
-                required
+                {...register("email", { required: "Email is required" })}
+    
               />
+              {errors.email && <span className="error-message">{errors.email.message}</span>}
             </div>
 
             {/* Phone Field */}
@@ -49,8 +104,9 @@ const FoodPartnerRegister = () => {
                 id="phone"
                 name="phone"
                 placeholder="+1 (555) 000-0000"
-                required
+                {...register("phoneNumber", { required: "Phone number is required" })}
               />
+              {errors.phoneNumber && <span className="error-message">{errors.phoneNumber.message}</span>}
             </div>
 
         {/* Address */}
@@ -61,8 +117,10 @@ const FoodPartnerRegister = () => {
                 id="address"
                 name="address"
                 placeholder="123 Main Street, City, State"
-                required
+                {...register("address", { required: "Address is required" })}
               />
+              {errors.address && <span className="error-message">{errors.address.message}</span>}   
+              
             </div>
 
            
@@ -75,9 +133,10 @@ const FoodPartnerRegister = () => {
                 id="password"
                 name="password"
                 placeholder="••••••••"
-              
-                required
+                {...register("password", { required: "Password is required" })}
               />
+              {errors.password && <span className="error-message">{errors.password.message}</span>}
+                       
             </div>
 
 

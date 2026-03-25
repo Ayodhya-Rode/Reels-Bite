@@ -2,9 +2,46 @@
 import '../../styles/theme.css'
 import '../../styles/auth.css'
 import { Link } from 'react-router-dom'
+import { useForm } from "react-hook-form"
+import api, { setAuthToken } from "../../api/api";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
 
 const FoodPartnerLogin = () => {
   
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+    const navigate = useNavigate();
+
+   const onSubmit = async (data) => {
+  try {
+    const res = await api.post(
+      "/auth/food-partner/login",
+      data,
+      { withCredentials: true } // cookie allow 
+    );
+
+    // Access token will return in response 
+    const accessToken = res.data.accessToken;
+       
+    // use access token for future authenticated requests
+    
+    setAuthToken(accessToken);
+    toast.success("Login successful ✅");
+
+    navigate("/create-food-post");
+
+  } catch (err) {
+    console.error("Login error:", err);
+     if (err.response && err.response.data && err.response.data.message) {
+      toast.error(err.response.data.message);
+    } else {
+      toast.error("Login failed. Please try again.");
+    }
+
+  }
+};
+
 
   return (
     <div className="auth-container">
@@ -15,7 +52,7 @@ const FoodPartnerLogin = () => {
             <p>Sign in to manage your restaurant</p>
           </div>
 
-          <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
+          <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
@@ -25,8 +62,9 @@ const FoodPartnerLogin = () => {
                 name="email"
                 placeholder="you@restaurant.com"
                
-                required
+               {...register("email", { required: "Email is required" })}
               />
+              {errors.email && <span className="error-message">{errors.email.message}</span>}
             </div>
 
             {/* Password Field */}
@@ -37,9 +75,10 @@ const FoodPartnerLogin = () => {
                 id="password"
                 name="password"
                 placeholder="••••••••"
-              
-                required
+                {...register("password", { required: "Password is required" })}
               />
+              {errors.password && <span className="error-message">{errors.password.message}</span>}   
+             
             </div>
 
             {/* Remember Me & Forgot Password */}

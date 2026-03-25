@@ -10,7 +10,6 @@ frontend/.env
 frontend/build/
 frontend/.DS_Store
 
-public/
 
 # Logs
 *.log
