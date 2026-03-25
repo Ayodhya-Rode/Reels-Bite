@@ -1,0 +1,6 @@
+@import './styles/theme.css';
+
+/* App Global Styles */
+#root {
+  min-height: 100vh;
+}
