@@ -21,13 +21,18 @@ const upload = multer({
  * only for food partner - applied authFoodPartnerMiddleware
  */
 
-router.post("/",authMiddleware.authFoodPartnerMiddleware, upload.single("video") ,foodItem.createFood)
+router.post("/create-food",authMiddleware.authFoodPartnerMiddleware, upload.single("video") ,foodItem.createFood)
 
 /**
  * GET  /api/food/[protected]
- * only for user to see the food items - 
+ * only for logged-in user to see the food items - 
  */
-router.get("/", authMiddleware.authUserMiddleware, foodItem.getAllFoodItems)
+router.get("/", foodItem.getAllFoodItems)
+
+
+router.post("/like", authMiddleware.authUserMiddleware, foodItem.likeFoodItem)
+
+router.post("/save", authMiddleware.authUserMiddleware, foodItem.saveFoodItem)
 
 
 export default router

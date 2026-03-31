@@ -2,8 +2,8 @@ import userModel from "../model/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
-import sessionModel from "../model/userSession.model.js";
-import crypto from "crypto";
+// import sessionModel from "../model/userSession.model.js";
+// import crypto from "crypto";
 
 /**
  * To regiter new user
@@ -16,26 +16,40 @@ export async function registerUser(req, res) {
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!fullName || !normalizedEmail || !password ||!phoneNumber) {
-      return res.status(400).json({ message: "All fields are required" });
+        return res.status(400).json({ 
+  error: true, 
+  type: "VALIDATION_ERROR", 
+  message: "All fields are required" 
+});
     }
     const phoneRegex = /^[6-9]\d{9}$/;
     
     if (!phoneRegex.test(phoneNumber)) {
-      return res.status(400).json({ message: "Invalid phone number format" });
+      return res.status(400).json({ 
+  error: true, 
+  type: "VALIDATION_ERROR", 
+  message: "Invalid phone number format" 
+});
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters long" });
-    }
+  return res.status(400).json({
+    error: true,
+    type: "VALIDATION_ERROR",
+    message: "Password must be at least 6 characters long"
+  });
+}
 
     const isUserAlreadyExists = await userModel.findOne({
       email: normalizedEmail,
     });
 
     if (isUserAlreadyExists) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.status(409).json({ 
+  error: true, 
+  type: "CONFLICT_ERROR", 
+  message: "User already exists" 
+    });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,69 +61,74 @@ export async function registerUser(req, res) {
       phoneNumber: phoneNumber.trim(),
     });
 
-    const activeSessionsCount = await sessionModel.countDocuments({
-      user: user._id,
-      revoked: false,
-    });
+    // const activeSessionsCount = await sessionModel.countDocuments({
+    //   user: user._id,
+    //   revoked: false,
+    // });
 
-    if (activeSessionsCount >= 4) {
-      return res.status(403).json({
-        message:
-          "Maximum device limit reached (4). Logout from another device first.",
-      });
-    }
+    // if (activeSessionsCount >= 4) {
+    //   return res.status(403).json({
+    //     message:
+    //       "Maximum device limit reached (4). Logout from another device first.",
+    //   });
+    // }
 
-    const refreshToken = jwt.sign(
-      {
-        id: user._id,
-      },
-      config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
-    );
+    // const refreshToken = jwt.sign(
+    //   {
+    //     id: user._id,
+    //   },
+    //   config.REFRESH_TOKEN_SECRET,
+    //   { expiresIn: "7d" },
+    // );
 
-    const hashedRefrshToken = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+    // const hashedRefrshToken = crypto
+    //   .createHash("sha256")
+    //   .update(refreshToken)
+    //   .digest("hex");
 
     //  creating new session for user
 
-    const session = await sessionModel.create({
-      user: user._id,
-      refreshTokenHash: hashedRefrshToken,
-      ip: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
+    // const session = await sessionModel.create({
+    //   user: user._id,
+    //   refreshTokenHash: hashedRefrshToken,
+    //   ip: req.ip,
+    //   userAgent: req.headers["user-agent"],
+    // });
 
     const accessToken = jwt.sign(
       {
         id: user._id,
-        sessionId: session._id,
+        // sessionId: session._id,
       },
       config.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "1d" },
     );
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: false, //now only for dev it is false, but it always true in production
       sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
+      success: true,
+      type: "USER_CREATED",
       message: "User Created successfully",
       user: {
         _id: user.id,
         fullName: fullName.trim(),
         email: normalizedEmail,
         phoneNumber: user.phoneNumber, 
-      },
-      accessToken,
+      }
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+return res.status(500).json({
+  error: true,
+  type: "SERVER_ERROR",
+  message: "Internal server error"
+});
   }
 }
 
@@ -117,80 +136,67 @@ export async function registerUser(req, res) {
  * To generate new access token from refresh token
  */
 
-export async function refreshToken(req, res) {
-  try {
-    const refreshToken = req.cookies.refreshToken;
+// export async function refreshToken(req, res) {
+//   try {
+//     const refreshToken = req.cookies.refreshToken;
 
-    if (!refreshToken) {
-      return res.status(401).json({
-        message: "Refresh token is not found",
-      });
-    }
+//     if (!refreshToken) {
+//       return res.status(401).json({
+//         message: "Refresh token is not found",
+//       });
+//     }
 
-    const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
+//     const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
 
-    if (!decoded) {
-      return res.status(404).json({
-        message: "Invalid Token ",
-      });
-    }
+ 
+//     // It allow only to login user, if user is logout then it will direct return from here
+//     // const session = await sessionModel.findOne({
+//     //   refreshTokenHash,
+//     //   revoked: false, // return login user not logout
+//     // });
 
-    const refreshTokenHash = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+//     // if (!session) {
+//     //   return res.status(401).json({ message: "Invalid refresh token" });
+//     // }
 
-    // It allow only to login user, if user is logout then it will direct return from here
-    const session = await sessionModel.findOne({
-      refreshTokenHash,
-      revoked: false, // return login user not logout
-    });
+//     const accessToken = jwt.sign(
+//       {
+//         id: decoded.id,
+//         // sessionId: session._id,
+//       },
+//       config.ACCESS_TOKEN_SECRET,
+//       { expiresIn: "15m" },
+//     );
 
-    if (!session) {
-      return res.status(401).json({ message: "Invalid refresh token" });
-    }
+//     const newRefreshToken = jwt.sign(
+//       {
+//         id: decoded.id,
+//       },
+//       config.REFRESH_TOKEN_SECRET,
+//       { expiresIn: "7d" },
+//     );
 
-    const accessToken = jwt.sign(
-      {
-        id: decoded.id,
-        sessionId: session._id,
-      },
-      config.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
-    );
+    
 
-    const newRefreshToken = jwt.sign(
-      {
-        id: decoded.id,
-      },
-      config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
-    );
+//     // session.refreshTokenHash = newRefreshTokenHash;
+//     // await session.save();
 
-    const newRefreshTokenHash = crypto
-      .createHash("sha256")
-      .update(newRefreshToken)
-      .digest("hex");
+//     res.cookie("refreshToken", newRefreshToken, {
+//       httpOnly: true,
+//       // secure:true,
+//       // sameSite: "strict",
+//       maxAge: 7 * 24 * 60 * 60 * 1000, // 7days
+//     });
 
-    session.refreshTokenHash = newRefreshTokenHash;
-    await session.save();
-
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      // secure:true,
-      // sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7days
-    });
-
-    res.status(200).json({
-      message: "Access Token refreshed successful",
-      accessToken,
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-}
+//     res.status(200).json({
+//       message: "Access Token refreshed successful",
+//       accessToken,
+//     });
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// }
 
 /**
  * To login a user
@@ -203,83 +209,99 @@ export async function login(req, res) {
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!normalizedEmail || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ 
+  error: true, 
+  type: "VALIDATION_ERROR", 
+  message: "All fields are required" 
+});
     }
 
     const user = await userModel.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.status(404).json({ message: "Invalid credentials" });
+        return res.status(404).json({ 
+  error: true, 
+  type: "NOT_FOUND_ERROR", 
+  message: "Invalid credentials" 
+});
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
 
-    if (!isValidPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+if (!isValidPassword) {
+  return res.status(401).json({
+    error: true,
+    type: "INVALID_CREDENTIALS",
+    message: "Invalid credentials"
+  });
+}
+    // const activeSessionsCount = await sessionModel.countDocuments({
+    //   user: user._id,
+    //   revoked: false,
+    // });
 
-    const activeSessionsCount = await sessionModel.countDocuments({
-      user: user._id,
-      revoked: false,
-    });
+    // if (activeSessionsCount >= 4) {
+    //   return res.status(403).json({
+    //     message:
+    //       "Maximum device limit reached (4). Logout from another device first.",
+    //   });
+    // }
 
-    if (activeSessionsCount >= 4) {
-      return res.status(403).json({
-        message:
-          "Maximum device limit reached (4). Logout from another device first.",
-      });
-    }
+    // const refreshToken = jwt.sign(
+    //   {
+    //     id: user._id,
+    //   },
+    //   config.REFRESH_TOKEN_SECRET,
+    //   { expiresIn: "7d" },
+    // );
 
-    const refreshToken = jwt.sign(
-      {
-        id: user._id,
-      },
-      config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    const hashedRefrshToken = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+    // const hashedRefrshToken = crypto
+    //   .createHash("sha256")
+    //   .update(refreshToken)
+    //   .digest("hex");
 
     //  creating new session for user
 
-    const session = await sessionModel.create({
-      user: user._id,
-      refreshTokenHash: hashedRefrshToken,
-      ip: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
+    // const session = await sessionModel.create({
+    //   user: user._id,
+    //   refreshTokenHash: hashedRefrshToken,
+    //   ip: req.ip,
+    //   userAgent: req.headers["user-agent"],
+    // });
 
     const accessToken = jwt.sign(
       {
         id: user._id,
-        sessionId: session._id,
+        // sessionId: session._id,
       },
       config.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "1d" },
     );
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false, //now only for dev it is false, but it always true in production
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      // secure: false, //now only for dev it is false, but it always true in production
+      // sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
+      success: true,
+      type: "LOGIN_SUCCESS",
       message: "User successfully logged in",
       user: {
         _id: user.id,
         email: user.email,
         fullName: user.fullName,
       },
-      accessToken,
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+return res.status(500).json({
+  error: true,
+  type: "SERVER_ERROR",
+  message: "Internal server error"
+});
   }
 }
 
@@ -288,36 +310,47 @@ export async function login(req, res) {
  */
 
 export async function logOut(req, res) {
-  const refreshToken = req.cookies.refreshToken;
+  const accessToken = req.cookies.accessToken;
 
-  if (!refreshToken) {
-    return res.status(400).json({
-      message: "Refresh token is not found",
-    });
+  if (!accessToken) {
+    return res.status(400).json({ 
+  error: true, 
+  type: "VALIDATION_ERROR", 
+  message: "Access token is not found" 
+});
+    
   }
 
-  const hashedRefrshToken = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
+  // const hashedRefrshToken = crypto
+  //   .createHash("sha256")
+  //   .update(refreshToken)
+  //   .digest("hex");
 
-  const session = await sessionModel.findOne({
-    refreshTokenHash: hashedRefrshToken,
-    revoked: false,
+  // const session = await sessionModel.findOne({
+  //   refreshTokenHash: hashedRefrshToken,
+  //   revoked: false,
+  // });
+
+  // if (!session) {
+  //   return res.status(400).json({
+  //     message: " Invalid refresh token",
+  //   });
+  // }
+
+  // session.revoked = true;
+  // await session.save();
+
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    // secure: true,       // always true in production
+    // sameSite: "strict", // adjust if cross-domain
   });
 
-  if (!session) {
-    return res.status(400).json({
-      message: " Invalid refresh token",
-    });
-  }
 
-  session.revoked = true;
-  await session.save();
-
-  res.clearCookie("refreshToken");
 
   return res.status(200).json({
+    success: true,
+    type: "LOGOUT_SUCCESS",   
     message: "Logged out successfully !",
   });
 }
@@ -326,28 +359,28 @@ export async function logOut(req, res) {
  * To logout from all devices
  */
 
-export async function logoutAll(req, res) {
-  const refreshToken = req.cookies.refreshToken;
+// export async function logoutAll(req, res) {
+//   const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken) {
-    return res.status(400).json({
-      message: "Refresh token is not found",
-    });
-  }
+//   if (!refreshToken) {
+//     return res.status(400).json({
+//       message: "Refresh token is not found",
+//     });
+//   }
 
-  const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
+//   const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
 
-  await sessionModel.updateMany(
-    {
-      user: decoded.id,
-      revoked: false,
-    },
-    { revoked: true },
-  );
+//   await sessionModel.updateMany(
+//     {
+//       user: decoded.id,
+//       revoked: false,
+//     },
+//     { revoked: true },
+//   );
 
-  res.clearCookie("refreshToken");
+//   res.clearCookie("refreshToken");
 
-  return res.status(200).json({
-    message: "Logout all devices successfully!",
-  });
-}
+//   return res.status(200).json({
+//     message: "Logout all devices successfully!",
+//   });
+// }

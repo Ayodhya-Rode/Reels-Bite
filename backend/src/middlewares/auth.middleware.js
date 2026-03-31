@@ -12,18 +12,16 @@ import userModel from "../model/user.model.js";
 export async function authFoodPartnerMiddleware(req, res, next) {
   try {
     // 1. Get the Authorization header from the request
-    const authHeader = req.headers.authorization;
+    const accessToken = req.cookies.accessToken
 
     // If no header or it doesn't start with "Bearer", deny access
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!accessToken) {
       return res.status(401).json({ message: "Please login first!" });
     }
 
-    // 2. Extract the token (the part after "Bearer")
-    const token = authHeader.split(" ")[1];
-
+  
     // 3. Verify the token using the ACCESS_TOKEN_SECRET
-    const decoded = jwt.verify(token, config.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
 
     // 4. Find the Food Partner in the database using the decoded id
     const foodPartner = await foodPartnerModel.findById(decoded.id);
@@ -44,21 +42,19 @@ export async function authFoodPartnerMiddleware(req, res, next) {
 
 /**
  * Middleware to authenticate a User
- * - The frontend must send the access token in the request header
- *   Example: Authorization: Bearer <accessToken>
  * - This middleware verifies the token and attaches the User to req
  */
 
 export async function authUserMiddleware(req, res, next) {
   try {
-    const authHeader = req.headers.authorization; 
+    const accessToken = req.cookies.accessToken
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!accessToken) {
       return res.status(401).json({ message: "Please login first!" });
     } 
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, config.ACCESS_TOKEN_SECRET);
+    
+    const decoded = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET);
 
     const user = await userModel.findById(decoded.id);  
 
