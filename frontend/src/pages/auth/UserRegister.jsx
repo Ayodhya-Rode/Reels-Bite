@@ -2,29 +2,42 @@ import "../../styles/theme.css";
 import "../../styles/auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import api, { setAuthToken } from "../../api/api";
+import axios from "axios";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
 
-
-
 const UserRegister = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
-      const res = await api.post("/auth/user/register", data, { withCredentials: true });
-      const accessToken = res.data.accessToken;
-      setAuthToken(accessToken);
+      const res = await axios.post(
+        "http://localhost:3000/api/auth/user/register",
+        data,
+        {
+          withCredentials: true,
+        },
+      );
 
-       toast.success("Account created successfully 🎉");
+      console.log("res data ", res.data);
+
+      toast.success(res.data.message || "User registered successfully 🎉");
 
       // redirect after successful registration
       navigate("/feed");
     } catch (err) {
       console.error("Registration error:", err);
+      if (err.response?.data?.message) {
+  toast.error(err.response.data.message);
+} else {
+  toast.error("Registration failed. Please try again.");
+}
     }
   };
 
@@ -35,30 +48,27 @@ const UserRegister = () => {
           <div className="auth-header">
             <h1>Join Reels Bite</h1>
             <p>Create your profile and start sharing bites of fun !</p>
-             
-              
-<div className="auth-switch">
-  <span>Switch as :</span>
-  <NavLink
-    to="/user/register"
-    className={({ isActive }) =>
-      isActive ? "switch-link active" : "switch-link"
-    }
-  >
-    User
-  </NavLink>
-  <span>·</span>
-  <NavLink
-    to="/food-partner/register"
-    className={({ isActive }) =>
-      isActive ? "switch-link active" : "switch-link"
-    }
-  >
-    Food Partner
-  </NavLink>
-</div>
 
-
+            <div className="auth-switch">
+              <span>Switch as :</span>
+              <NavLink
+                to="/user/register"
+                className={({ isActive }) =>
+                  isActive ? "switch-link active" : "switch-link"
+                }
+              >
+                User
+              </NavLink>
+              <span>·</span>
+              <NavLink
+                to="/food-partner/register"
+                className={({ isActive }) =>
+                  isActive ? "switch-link active" : "switch-link"
+                }
+              >
+                Food Partner
+              </NavLink>
+            </div>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
@@ -71,7 +81,9 @@ const UserRegister = () => {
                 placeholder="John Doe"
                 {...register("fullName", { required: "Full name is required" })}
               />
-              {errors.fullName && <span className="error-message">{errors.fullName.message}</span>}
+              {errors.fullName && (
+                <span className="error-message">{errors.fullName.message}</span>
+              )}
             </div>
 
             {/* Email Field */}
@@ -83,7 +95,9 @@ const UserRegister = () => {
                 placeholder="you@example.com"
                 {...register("email", { required: "Email is required" })}
               />
-              {errors.email && <span className="error-message">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="error-message">{errors.email.message}</span>
+              )}
             </div>
 
             {/* Phone Field */}
@@ -93,9 +107,15 @@ const UserRegister = () => {
                 type="tel"
                 id="phone"
                 placeholder="0000000000"
-                {...register("phoneNumber", { required: "Phone number is required" })}
+                {...register("phoneNumber", {
+                  required: "Phone number is required",
+                })}
               />
-              {errors.phoneNumber && <span className="error-message">{errors.phoneNumber.message}</span>}
+              {errors.phoneNumber && (
+                <span className="error-message">
+                  {errors.phoneNumber.message}
+                </span>
+              )}
             </div>
 
             {/* Password Field */}
@@ -107,7 +127,9 @@ const UserRegister = () => {
                 placeholder="••••••••"
                 {...register("password", { required: "Password is required" })}
               />
-              {errors.password && <span className="error-message">{errors.password.message}</span>}
+              {errors.password && (
+                <span className="error-message">{errors.password.message}</span>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -130,9 +152,6 @@ const UserRegister = () => {
               Sign In
             </Link>
           </div>
-
-      
-
         </div>
       </div>
     </div>

@@ -1,0 +1,97 @@
+/* Reels-like left action stack (Like/Dislike/Share/Save) */
+
+@media (prefers-color-scheme: dark) {
+  .action-bar {
+    --action-icon-bg: rgba(255, 255, 255, 0.14);
+    --action-icon-bg-hover: rgba(255, 255, 255, 0.2);
+    --action-icon-border: rgba(255, 255, 255, 0.18);
+    --action-icon-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  }
+}
+
+.action-bar {
+  /* Light mode: dark translucent glass so icons stay high-contrast */
+  --action-icon-bg: rgba(15, 23, 42, 0.12);
+  --action-icon-bg-hover: rgba(15, 23, 42, 0.18);
+  --action-icon-border: rgba(15, 23, 42, 0.14);
+  --action-icon-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid var(--action-icon-border);
+  background: var(--action-icon-bg);
+  color: var(--text-primary);
+  box-shadow: var(--action-icon-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.06);
+  background: var(--action-icon-bg-hover);
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.action-btn.liked {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(254, 202, 202, 0.18);
+}
+
+.action-btn.liked .action-icon {
+  color: #ef4444;
+  fill: #ef4444;
+}
+
+.action-btn.saved {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.action-btn.saved .action-icon {
+  color: white;
+  fill: white;
+  stroke: white;
+}
+
+.action-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+

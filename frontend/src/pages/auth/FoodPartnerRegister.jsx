@@ -1,37 +1,45 @@
-
-import '../../styles/theme.css'
-import '../../styles/auth.css'
+import "../../styles/theme.css";
+import "../../styles/auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import api, { setAuthToken } from "../../api/api";
+import axios from "axios";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
 
-
-
-
 const FoodPartnerRegister = () => {
-
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   const navigate = useNavigate();
 
-  
   const onSubmit = async (data) => {
     try {
-      const res = await api.post("/auth/food-partner/register", data, { withCredentials: true });
-      const accessToken = res.data.accessToken;
-      setAuthToken(accessToken);
+      const res = await axios.post(
+        "http://localhost:3000/api/auth/food-partner/register",
+        data,
+        {
+          withCredentials: true,
+        },
+      );
+      console.log("res data ", res.data);
 
       // redirect after successful registration
       navigate("/create-food-post");
-       toast.success("Restaurant registered successfully 🎉");
-
+      toast.success(
+        res.data.message || "Restaurant registered successfully 🎉",
+      );
     } catch (err) {
       console.error("Registration error:", err);
+      if (err.response?.data?.message) {
+  toast.error(err.response.data.message);
+} else {
+  toast.error("Registration failed. Please try again.");
+}
     }
   };
-
 
   return (
     <div className="auth-container">
@@ -41,29 +49,28 @@ const FoodPartnerRegister = () => {
             <h1>Expand Your Reach</h1>
             <p>Expand your reach by connecting with hungry customers</p>
 
-              {/* Role Switch */}
-                            
-                  <div className="auth-switch">
-                    <span>Switch as :</span>
-                    <NavLink
-                      to="/user/register"
-                      className={({ isActive }) =>
-                        isActive ? "switch-link active" : "switch-link"
-                      }
-                    >
-                      User
-                    </NavLink>
-                    <span>·</span>
-                    <NavLink
-                      to="/food-partner/register"
-                      className={({ isActive }) =>
-                        isActive ? "switch-link active" : "switch-link"
-                      }
-                    >
-                      Food Partner
-                    </NavLink>
-                  </div>
-             
+            {/* Role Switch */}
+
+            <div className="auth-switch">
+              <span>Switch as :</span>
+              <NavLink
+                to="/user/register"
+                className={({ isActive }) =>
+                  isActive ? "switch-link active" : "switch-link"
+                }
+              >
+                User
+              </NavLink>
+              <span>·</span>
+              <NavLink
+                to="/food-partner/register"
+                className={({ isActive }) =>
+                  isActive ? "switch-link active" : "switch-link"
+                }
+              >
+                Food Partner
+              </NavLink>
+            </div>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
@@ -75,11 +82,15 @@ const FoodPartnerRegister = () => {
                 id="restaurantName"
                 name="restaurantName"
                 placeholder="Your Restaurant Name"
-                 {...register("restaurantName", { required: "Restaurant name is required" })}
-             
+                {...register("restaurantName", {
+                  required: "Restaurant name is required",
+                })}
               />
-              {errors.restaurantName && <span className="error-message">{errors.restaurantName.message}</span>}
-
+              {errors.restaurantName && (
+                <span className="error-message">
+                  {errors.restaurantName.message}
+                </span>
+              )}
             </div>
 
             {/* Email Field */}
@@ -91,9 +102,10 @@ const FoodPartnerRegister = () => {
                 name="email"
                 placeholder="you@restaurant.com"
                 {...register("email", { required: "Email is required" })}
-    
               />
-              {errors.email && <span className="error-message">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="error-message">{errors.email.message}</span>
+              )}
             </div>
 
             {/* Phone Field */}
@@ -104,12 +116,18 @@ const FoodPartnerRegister = () => {
                 id="phone"
                 name="phone"
                 placeholder="+1 (555) 000-0000"
-                {...register("phoneNumber", { required: "Phone number is required" })}
+                {...register("phoneNumber", {
+                  required: "Phone number is required",
+                })}
               />
-              {errors.phoneNumber && <span className="error-message">{errors.phoneNumber.message}</span>}
+              {errors.phoneNumber && (
+                <span className="error-message">
+                  {errors.phoneNumber.message}
+                </span>
+              )}
             </div>
 
-        {/* Address */}
+            {/* Address */}
             <div className="form-group">
               <label htmlFor="address">Restaurant Address</label>
               <input
@@ -119,11 +137,10 @@ const FoodPartnerRegister = () => {
                 placeholder="123 Main Street, City, State"
                 {...register("address", { required: "Address is required" })}
               />
-              {errors.address && <span className="error-message">{errors.address.message}</span>}   
-              
+              {errors.address && (
+                <span className="error-message">{errors.address.message}</span>
+              )}
             </div>
-
-           
 
             {/* Password */}
             <div className="form-group">
@@ -135,11 +152,10 @@ const FoodPartnerRegister = () => {
                 placeholder="••••••••"
                 {...register("password", { required: "Password is required" })}
               />
-              {errors.password && <span className="error-message">{errors.password.message}</span>}
-                       
+              {errors.password && (
+                <span className="error-message">{errors.password.message}</span>
+              )}
             </div>
-
-
 
             {/* Submit Button */}
             <button type="submit" className="btn-submit">
@@ -168,14 +184,21 @@ const FoodPartnerRegister = () => {
           {/* Login Link */}
           <div className="auth-alternative">
             Already registered?
-            <Link to="/food-partner/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', marginLeft: '5px' }}>
+            <Link
+              to="/food-partner/login"
+              style={{
+                color: "var(--primary-color)",
+                textDecoration: "none",
+                marginLeft: "5px",
+              }}
+            >
               Sign In
             </Link>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FoodPartnerRegister
+export default FoodPartnerRegister;
