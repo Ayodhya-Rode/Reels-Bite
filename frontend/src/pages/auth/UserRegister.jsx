@@ -17,11 +17,21 @@ const UserRegister = () => {
 
   const onSubmit = async (data) => {
     try {
+        // const formData = new FormData()
+
+        // formData.append("fullName", data.fullName)
+        // formData.append("email", data.email)
+        // formData.append("phoneNumber", data.phoneNumber)
+        // formData.append("password", data.password)
+
+        // // 🔥 file handling
+        // formData.append("profilePic", data.profilePic[0])
       const res = await axios.post(
         "http://localhost:3000/api/auth/user/register",
-        data,
+         data,
         {
           withCredentials: true,
+
         },
       );
 
@@ -73,6 +83,20 @@ const UserRegister = () => {
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Full Name Field */}
+            <div className="form-group">
+                <label htmlFor="profilePic">Profile Picture</label>
+                <input
+                  type="file"
+                  id="profilePic"
+                  accept="image/*"
+                  {...register("profilePic", {
+                    required: "Profile picture is required",
+                    })}
+                  />
+                  {errors.profilePic && (
+                    <span className="error-message">{errors.profilePic.message}</span>
+                  )}
+            </div>
             <div className="form-group">
               <label htmlFor="fullName">Full Name</label>
               <input

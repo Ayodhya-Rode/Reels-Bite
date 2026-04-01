@@ -24,8 +24,6 @@ const FoodPartnerLogin = () => {
           withCredentials: true,
         },
       );
-
-      console.log("res data ", res.data);
       toast.success(res.data.message || "Login successful ✅");
 
       navigate(`/food-partner/${res.data?.user?._id}`);
