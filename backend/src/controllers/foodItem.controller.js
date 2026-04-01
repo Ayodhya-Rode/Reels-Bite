@@ -6,6 +6,7 @@ import savedItemModel from "../model/savedItem.model.js";
 
 export async function createFood(req, res) {
   try {
+           
         if (!req.file) {
         return res.status(400).json({
         error: true,
@@ -41,6 +42,10 @@ export async function createFood(req, res) {
       type: "FOOD_ITEM_CREATED",
       message: "Food item created successfully",
       food: foodItem,
+      foodPartner: {
+    name: req.foodPartner.restaurantName,
+    avatar: req.foodPartner.avatar
+  }
     });
 
   } catch (error) {
@@ -212,85 +217,3 @@ export async function saveFoodItem(req, res) {
   }
 }
 
-// import savedItemModel from "../models/savedItemModel.js";
-// import foodItemModel from "../models/foodItemModel.js";
-
-// export async function saveFoodItem(req, res) {
-//   try {
-//     const { foodId } = req.body;
-//     const user = req.user;
-
-//     if (!foodId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "foodId is required"
-//       });
-//     }
-
-//     let isSaved = false;
-
-//     // 🔍 check existing save
-//     const existingSave = await savedItemModel.findOne({
-//       user: user._id,
-//       food: foodId
-//     });
-
-//     if (existingSave) {
-//       // ❌ UNSAVE
-//       await savedItemModel.deleteOne({
-//         user: user._id,
-//         food: foodId
-//       });
-
-//       await foodItemModel.findByIdAndUpdate(
-//         foodId,
-//         { $inc: { saveCount: -1 } }
-//       );
-
-//       isSaved = false;
-
-//     } else {
-//       // ✅ SAVE (handle duplicate safely)
-//       try {
-//         await savedItemModel.create({
-//           user: user._id,
-//           food: foodId
-//         });
-
-//         await foodItemModel.findByIdAndUpdate(
-//           foodId,
-//           { $inc: { saveCount: 1 } }
-//         );
-
-//         isSaved = true;
-
-//       } catch (err) {
-//         // 🔥 duplicate click protection
-//         if (err.code === 11000) {
-//           isSaved = true;
-//         } else {
-//           throw err;
-//         }
-//       }
-//     }
-
-//     // 🔥 ALWAYS RETURN UPDATED COUNT
-//     const updatedFood = await foodItemModel
-//       .findById(foodId)
-//       .select("saveCount");
-
-//     return res.status(200).json({
-//       success: true,
-//       isSaved,
-//       saveCount: Math.max(0, updatedFood?.saveCount || 0)
-//     });
-
-//   } catch (error) {
-//     console.error("Error saving food item:", error);
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to save food item"
-//     });
-//   }
-// }
