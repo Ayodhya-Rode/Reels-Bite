@@ -10,22 +10,34 @@ const FoodPartnerRegister = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
 
+  const selectedAvatar = watch('partnerAvatar')
+  const selectedFileName = selectedAvatar?.[0]?.name || ''
+
   const navigate = useNavigate();
 
-  const onSubmit = async (data) => {
+  const onSubmit = async () => {
+
+    const formData = new FormData()
+    formData.append('restaurantName', watch('restaurantName'))
+    formData.append('email', watch('email'))
+    formData.append('phoneNumber', watch('phoneNumber'))
+    formData.append('address', watch('address'))
+    formData.append('password', watch('password'))
+    formData.append('avatar', selectedAvatar[0])
+
     try {
       const res = await axios.post(
         "http://localhost:3000/api/auth/food-partner/register",
-        data,
+        formData,
         {
           withCredentials: true,
         },
       );
-      console.log("res data ", res.data);
-
+      
       // redirect after successful registration
       navigate("/create-food-post");
       toast.success(
@@ -93,6 +105,36 @@ const FoodPartnerRegister = () => {
               )}
             </div>
 
+              <div className="form-group">
+            <label htmlFor="videoFile">Upload Avatar</label>
+            <div className={`file-upload ${errors.avatar ? 'file-upload-error' : ''}`}>
+              <input
+                id="avatarFile"
+                name="avatar"
+                type="file"
+                accept="image/*"
+                {...register('avatar', {
+                  required: 'Please upload an avatar.',
+                })}
+              />
+              <label htmlFor="avatarFile" className="file-upload-button">
+                <span className="file-upload-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3v12" />
+                    <path d="M8 11l4 4 4-4" />
+                    <path d="M5 19h14" />
+                  </svg>
+                </span>
+                  <span className="file-upload-text">
+                  {selectedFileName || 'Choose an image'}
+                </span>
+                <span className="file-upload-action">Browse</span>
+              </label>
+            </div>
+            {errors.partnerAvatar && (
+              <span className="error-message">{errors.partnerAvatar.message}</span>
+            )}
+          </div>
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
