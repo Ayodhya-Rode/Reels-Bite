@@ -240,6 +240,7 @@ const Home = () => {
                   >
                     Visit Store
                   </Link>
+                  
                 </div>
               </div>
 
