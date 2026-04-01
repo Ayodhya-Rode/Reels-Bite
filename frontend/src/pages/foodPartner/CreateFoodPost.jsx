@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import '../../styles/theme.css'
 import './CreateFoodPost.css'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 
 
 const CreateFoodPost = () => {
@@ -15,6 +16,29 @@ const CreateFoodPost = () => {
     watch,
     formState: { errors },
   } = useForm()
+  
+  const [profileData, setProfileData] = useState(null)
+  
+  // const { id } = useParams()
+  // console.log(id);
+  
+  useEffect(() => {
+  const fetchProfileData = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/auth/me",
+        { withCredentials: true }
+      )
+
+      setProfileData(response.data.foodPartner)
+    } catch (error) {
+      console.error("Error fetching profile data:", error)
+    }
+  }
+
+  fetchProfileData()
+}, [])
+  
 
 
   const selectedVideo = watch('video')
@@ -28,12 +52,12 @@ const CreateFoodPost = () => {
 
     try {
      const response = await axios.post("http://localhost:3000/api/food/create-food", formData,{withCredentials: true})
-     console.log(response.data);
      navigate('/feed') // Redirect to feed or appropriate page after successful submission
-     
-     toast.success('Video details saved successfully!')
+        console.log(response.data, " create food data");
+        
+     toast.success('Video Uploaded Successfully!')
     } catch (error) {
-      toast.error('Failed to save video details.', { description: error.response?.data?.message || error.message })
+      toast.error('Failed to upload video ', { description: error.response?.data?.message || error.message })
     }
     // TODO: wire this submit to upload endpoint or state management
   }
@@ -46,7 +70,7 @@ const CreateFoodPost = () => {
     <div className="create-food-post-page">
       <div className="create-food-post-card">
         <header className="create-food-post-header">
-          <p className="eyebrow">Food Partner Reel</p>
+          <p className="eyebrow">Welcome, <span >{profileData?.restaurantName || "User"}</span></p>
           <h1>Create New Video Post</h1>
           <p className="subtitle">
             Upload your reel, add a name and description, then submit to share your food story.
