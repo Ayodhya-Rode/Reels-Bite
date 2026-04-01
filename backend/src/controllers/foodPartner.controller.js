@@ -3,12 +3,15 @@ import foodItemModel from "../model/foodItem.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
+import * as storageService from "../services/storage.service.js";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * To register a new FoodPartner
  */
 export async function registerFoodPartner(req, res) {
   try {
+    const avatar = req.file;
     const { restaurantName, email, password, phoneNumber, address } = req.body;
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -18,7 +21,7 @@ export async function registerFoodPartner(req, res) {
       !normalizedEmail ||
       !password ||
       !phoneNumber ||
-      !address
+      !address || !avatar
     ) {
       return res.status(400).json({
         error: true,
@@ -57,19 +60,22 @@ export async function registerFoodPartner(req, res) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const fileUploadResult = await storageService.uploadFile(
+      avatar.buffer,
+      uuidv4()
+    );
+    console.log(fileUploadResult)
+
     const foodPartner = await foodPartnerModel.create({
       restaurantName: restaurantName.trim(),
       email: normalizedEmail,
       password: hashedPassword,
       phoneNumber: phoneNumber.trim(),
       address: address.trim(),
+      avatar: fileUploadResult.url
     });
-
-    // const refreshToken = jwt.sign(
-    //   { id: foodPartner._id },
-    //   config.REFRESH_TOKEN_SECRET,
-    //   { expiresIn: "7d" }
-    // );
+    console.log(foodPartner);
+    
 
     const accessToken = jwt.sign(
       { id: foodPartner._id },
@@ -79,7 +85,7 @@ export async function registerFoodPartner(req, res) {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: false, // production मध्ये true ठेव
+      // secure: false, 
       // sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -94,6 +100,7 @@ export async function registerFoodPartner(req, res) {
         email: foodPartner.email,
         phoneNumber: foodPartner.phoneNumber,
         address: foodPartner.address,
+        avatar : foodPartner.avatar
       },
     });
   } catch (error) {
@@ -231,7 +238,8 @@ export async function getFoodPartnerById(req, res) {
     const foodPartner = await foodPartnerModel.findById({ _id: foodPartnerId });
     const foodItemsByFoodPartner = await foodItemModel.find({ foodPartner: foodPartnerId });
     
-    console.log("Searching ID:", foodPartnerId)
+    console.log(foodPartner, "part");
+    
 
     if (!foodPartner) {
       return res.status(404).json({
@@ -250,7 +258,8 @@ export async function getFoodPartnerById(req, res) {
         restaurantName: foodPartner.restaurantName,
         phoneNumber: foodPartner.phoneNumber,
         address: foodPartner.address,
-        foodItems: foodItemsByFoodPartner
+        avatar: foodPartner.avatar,
+        foodItems: foodItemsByFoodPartner,
       },
       
     });
