@@ -14,7 +14,7 @@ const FoodPartnerRegister = () => {
     formState: { errors },
   } = useForm();
 
-  const selectedAvatar = watch('partnerAvatar')
+  const selectedAvatar = watch('avatar')
   const selectedFileName = selectedAvatar?.[0]?.name || ''
 
   const navigate = useNavigate();

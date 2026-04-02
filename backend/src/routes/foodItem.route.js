@@ -21,13 +21,20 @@ router.post("/create-food",authMiddleware.authFoodPartnerMiddleware, upload.sing
 
 /**
  * GET  /api/food/
- * only for logged-in user and food partners to see the food items - 
+ *All logged-in user and food partners  see the food items - 
  */
 router.get("/", foodItem.getAllFoodItems)
 
-
+/**
+ * POST /api/food/like [protected]
+ * only for logged-in users - applied authUserMiddleware
+ */
 router.post("/like", authMiddleware.authUserMiddleware, foodItem.likeFoodItem)
 
+/**
+ * POST /api/food/save [protected]
+ * only for logged-in users - applied authUserMiddleware
+ */
 router.post("/save", authMiddleware.authUserMiddleware, foodItem.saveFoodItem)
 
 

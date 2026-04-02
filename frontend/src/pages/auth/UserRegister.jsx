@@ -83,20 +83,7 @@ const UserRegister = () => {
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Full Name Field */}
-            <div className="form-group">
-                <label htmlFor="profilePic">Profile Picture</label>
-                <input
-                  type="file"
-                  id="profilePic"
-                  accept="image/*"
-                  {...register("profilePic", {
-                    required: "Profile picture is required",
-                    })}
-                  />
-                  {errors.profilePic && (
-                    <span className="error-message">{errors.profilePic.message}</span>
-                  )}
-            </div>
+            
             <div className="form-group">
               <label htmlFor="fullName">Full Name</label>
               <input

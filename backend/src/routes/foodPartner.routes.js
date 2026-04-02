@@ -9,10 +9,19 @@ const upload = multer({
     storage : multer.memoryStorage()
 })
 
+/**
+ * POST /api/auth/food-partner/register
+ */
 router.post("/food-partner/register", upload.single("avatar"), foodPartnerController.registerFoodPartner)
  
+/**
+ * POST /api/auth/food-partner/login
+ */
 router.post("/food-partner/login", foodPartnerController.login)
 
+/**
+ * POST /api/auth/food-partner/logout
+ */
 router.post("/food-partner/logout",foodPartnerController.logOut)
 
 /**
@@ -22,6 +31,9 @@ router.post("/food-partner/logout",foodPartnerController.logOut)
 
 router.get("/food-partner/:id",foodPartnerController.getFoodPartnerById)
 
+/**
+ * GET - /api/auth/food-partner/me
+ */
 router.get(
   "/me",
   authFoodPartnerMiddleware.authFoodPartnerMiddleware,
