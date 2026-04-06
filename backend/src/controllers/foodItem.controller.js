@@ -6,56 +6,52 @@ import savedItemModel from "../model/savedItem.model.js";
 
 export async function createFood(req, res) {
   try {
-           
-        if (!req.file) {
-        return res.status(400).json({
+    if (!req.file) {
+      return res.status(400).json({
         error: true,
         type: "VALIDATION_ERROR",
-        message: "File is required"
+        message: "File is required",
       });
-
-        }
-        if (!req.body.name) {
-        return res.status(400).json({
+    }
+    if (!req.body.name) {
+      return res.status(400).json({
         error: true,
         type: "VALIDATION_ERROR",
-        message: "Name is required"
-         });
-        }
+        message: "Name is required",
+      });
+    }
 
-        // Upload file to ImageKit
-        const fileUploadResult = await storageService.uploadFile(
-        req.file.buffer,
-        uuidv4()
-        );
+    // Upload file to ImageKit
+    const fileUploadResult = await storageService.uploadFile(
+      req.file.buffer,
+      uuidv4(),
+    );
 
-        // Create food item in DB
-        const foodItem = await foodItemModel.create({
-            name: req.body.name,
-            video: fileUploadResult.url, // Store the URL returned by ImageKit
-            description: req.body.description,
-            foodPartner: req.foodPartner._id,
-        });
+    // Create food item in DB
+    const foodItem = await foodItemModel.create({
+      name: req.body.name,
+      video: fileUploadResult.url, // Store the URL returned by ImageKit
+      description: req.body.description,
+      foodPartner: req.foodPartner._id,
+    });
 
-         return res.status(201).json({
+    return res.status(201).json({
       success: true,
       type: "FOOD_ITEM_CREATED",
       message: "Food item created successfully",
       food: foodItem,
       foodPartner: {
-    name: req.foodPartner.restaurantName,
-    avatar: req.foodPartner.avatar
-  }
+        name: req.foodPartner.restaurantName,
+        avatar: req.foodPartner.avatar,
+      },
     });
-
   } catch (error) {
-        console.error("Error creating food item:", error);
-        return res.status(500).json({
+    console.error("Error creating food item:", error);
+    return res.status(500).json({
       error: true,
       type: "SERVER_ERROR",
-      message: "Failed to create food item"
+      message: "Failed to create food item",
     });
-
   }
 }
 
@@ -73,7 +69,7 @@ export async function getAllFoodItems(req, res) {
     return res.status(500).json({
       error: true,
       type: "SERVER_ERROR",
-      message: "Failed to fetch food items"
+      message: "Failed to fetch food items",
     });
   }
 }
@@ -86,7 +82,7 @@ export async function likeFoodItem(req, res) {
     if (!foodId) {
       return res.status(400).json({
         success: false,
-        message: "foodId is required"
+        message: "foodId is required",
       });
     }
 
@@ -95,38 +91,34 @@ export async function likeFoodItem(req, res) {
     // 🔍 check existing like
     const existingLike = await likeModel.findOne({
       user: user._id,
-      food: foodId
+      food: foodId,
     });
 
     if (existingLike) {
       // ❌ UNLIKE
       await likeModel.deleteOne({
         user: user._id,
-        food: foodId
+        food: foodId,
       });
 
-      await foodItemModel.findByIdAndUpdate(
-        foodId,
-        { $inc: { likeCount: -1 } }
-      );
+      await foodItemModel.findByIdAndUpdate(foodId, {
+        $inc: { likeCount: -1 },
+      });
 
       isLiked = false;
-
     } else {
       // ✅ LIKE (handle duplicate safely)
       try {
         await likeModel.create({
           user: user._id,
-          food: foodId
+          food: foodId,
         });
 
-        await foodItemModel.findByIdAndUpdate(
-          foodId,
-          { $inc: { likeCount: 1 } }
-        );
+        await foodItemModel.findByIdAndUpdate(foodId, {
+          $inc: { likeCount: 1 },
+        });
 
         isLiked = true;
-
       } catch (err) {
         // 🔥 duplicate key error (user clicked too fast)
         if (err.code === 11000) {
@@ -145,15 +137,14 @@ export async function likeFoodItem(req, res) {
     return res.status(200).json({
       success: true,
       isLiked,
-      likeCount: Math.max(0, updatedFood?.likeCount || 0)
+      likeCount: Math.max(0, updatedFood?.likeCount || 0),
     });
-
   } catch (error) {
     console.error("Error liking food item:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to like food item"
+      message: "Failed to like food item",
     });
   }
 }
@@ -165,7 +156,7 @@ export async function saveFoodItem(req, res) {
 
     const isAlreadySaved = await savedItemModel.findOne({
       user: user._id,
-      food: foodId
+      food: foodId,
     });
 
     let isSaved;
@@ -173,25 +164,21 @@ export async function saveFoodItem(req, res) {
     if (isAlreadySaved) {
       await savedItemModel.deleteOne({
         user: user._id,
-        food: foodId
+        food: foodId,
       });
 
-      await foodItemModel.findByIdAndUpdate(
-        foodId,
-        { $inc: { saveCount: -1 } }
-      );
+      await foodItemModel.findByIdAndUpdate(foodId, {
+        $inc: { saveCount: -1 },
+      });
 
       isSaved = false;
     } else {
       await savedItemModel.create({
         user: user._id,
-        food: foodId
+        food: foodId,
       });
 
-      await foodItemModel.findByIdAndUpdate(
-        foodId,
-        { $inc: { saveCount: 1 } }
-      );
+      await foodItemModel.findByIdAndUpdate(foodId, { $inc: { saveCount: 1 } });
 
       isSaved = true;
     }
@@ -204,16 +191,14 @@ export async function saveFoodItem(req, res) {
     return res.status(200).json({
       success: true,
       isSaved,
-      saveCount: updatedFood.saveCount
+      saveCount: updatedFood.saveCount,
     });
-
   } catch (error) {
     console.error("Error saving food item:", error);
 
     return res.status(500).json({
       error: true,
-      message: "Failed to save food item"
+      message: "Failed to save food item",
     });
   }
 }
-

@@ -21,7 +21,8 @@ export async function registerFoodPartner(req, res) {
       !normalizedEmail ||
       !password ||
       !phoneNumber ||
-      !address || !avatar
+      !address ||
+      !avatar
     ) {
       return res.status(400).json({
         error: true,
@@ -62,9 +63,9 @@ export async function registerFoodPartner(req, res) {
 
     const fileUploadResult = await storageService.uploadFile(
       avatar.buffer,
-      uuidv4()
+      uuidv4(),
     );
-    console.log(fileUploadResult)
+    console.log(fileUploadResult);
 
     const foodPartner = await foodPartnerModel.create({
       restaurantName: restaurantName.trim(),
@@ -72,10 +73,9 @@ export async function registerFoodPartner(req, res) {
       password: hashedPassword,
       phoneNumber: phoneNumber.trim(),
       address: address.trim(),
-      avatar: fileUploadResult.url
+      avatar: fileUploadResult.url,
     });
     console.log(foodPartner);
-    
 
     const accessToken = jwt.sign(
       { id: foodPartner._id },
@@ -85,8 +85,8 @@ export async function registerFoodPartner(req, res) {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: false, 
-      // sameSite: "none",
+      secure: true,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -100,7 +100,7 @@ export async function registerFoodPartner(req, res) {
         email: foodPartner.email,
         phoneNumber: foodPartner.phoneNumber,
         address: foodPartner.address,
-        avatar : foodPartner.avatar
+        avatar: foodPartner.avatar,
       },
     });
   } catch (error) {
@@ -160,8 +160,8 @@ export async function login(req, res) {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: false,
-      // sameSite: "none",
+      secure: true,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -204,8 +204,8 @@ export async function logOut(req, res) {
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-      // secure: false,
-      // sameSite: "none",
+      secure: true,
+      sameSite: "none",
     });
 
     return res.status(200).json({
@@ -236,10 +236,11 @@ export async function getFoodPartnerById(req, res) {
     }
 
     const foodPartner = await foodPartnerModel.findById({ _id: foodPartnerId });
-    const foodItemsByFoodPartner = await foodItemModel.find({ foodPartner: foodPartnerId });
-    
+    const foodItemsByFoodPartner = await foodItemModel.find({
+      foodPartner: foodPartnerId,
+    });
+
     console.log(foodPartner, "part");
-    
 
     if (!foodPartner) {
       return res.status(404).json({
@@ -248,7 +249,7 @@ export async function getFoodPartnerById(req, res) {
         message: "Food Partner not found",
       });
     }
-    
+
     return res.status(200).json({
       success: true,
       type: "FOOD_PARTNER_FETCHED",
@@ -261,13 +262,10 @@ export async function getFoodPartnerById(req, res) {
         avatar: foodPartner.avatar,
         foodItems: foodItemsByFoodPartner,
       },
-      
     });
-
-
   } catch (error) {
     console.error("Login error:", error);
-     return res.status(500).json({
+    return res.status(500).json({
       error: true,
       type: "SERVER_ERROR",
       message: "Internal server error",

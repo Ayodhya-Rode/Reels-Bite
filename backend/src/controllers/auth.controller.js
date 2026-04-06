@@ -15,41 +15,41 @@ export async function registerUser(req, res) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    if (!fullName || !normalizedEmail || !password ||!phoneNumber) {
-        return res.status(400).json({ 
-  error: true, 
-  type: "VALIDATION_ERROR", 
-  message: "All fields are required" 
-});
+    if (!fullName || !normalizedEmail || !password || !phoneNumber) {
+      return res.status(400).json({
+        error: true,
+        type: "VALIDATION_ERROR",
+        message: "All fields are required",
+      });
     }
     const phoneRegex = /^[6-9]\d{9}$/;
-    
+
     if (!phoneRegex.test(phoneNumber)) {
-      return res.status(400).json({ 
-  error: true, 
-  type: "VALIDATION_ERROR", 
-  message: "Invalid phone number format" 
-});
+      return res.status(400).json({
+        error: true,
+        type: "VALIDATION_ERROR",
+        message: "Invalid phone number format",
+      });
     }
 
     if (password.length < 6) {
-  return res.status(400).json({
-    error: true,
-    type: "VALIDATION_ERROR",
-    message: "Password must be at least 6 characters long"
-  });
-}
+      return res.status(400).json({
+        error: true,
+        type: "VALIDATION_ERROR",
+        message: "Password must be at least 6 characters long",
+      });
+    }
 
     const isUserAlreadyExists = await userModel.findOne({
       email: normalizedEmail,
     });
 
     if (isUserAlreadyExists) {
-      return res.status(409).json({ 
-  error: true, 
-  type: "CONFLICT_ERROR", 
-  message: "User already exists" 
-    });
+      return res.status(409).json({
+        error: true,
+        type: "CONFLICT_ERROR",
+        message: "User already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -106,7 +106,7 @@ export async function registerUser(req, res) {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false, //now only for dev it is false, but it always true in production
+      secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -119,16 +119,16 @@ export async function registerUser(req, res) {
         _id: user.id,
         fullName: fullName.trim(),
         email: normalizedEmail,
-        phoneNumber: user.phoneNumber, 
-      }
+        phoneNumber: user.phoneNumber,
+      },
     });
   } catch (error) {
-    console.error("Login error:", error);
-return res.status(500).json({
-  error: true,
-  type: "SERVER_ERROR",
-  message: "Internal server error"
-});
+      console.error("Login error:", error);
+      return res.status(500).json({
+        error: true,
+        type: "SERVER_ERROR",
+        message: "Internal server error",
+      });
   }
 }
 
@@ -148,7 +148,6 @@ return res.status(500).json({
 
 //     const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
 
- 
 //     // It allow only to login user, if user is logout then it will direct return from here
 //     // const session = await sessionModel.findOne({
 //     //   refreshTokenHash,
@@ -175,8 +174,6 @@ return res.status(500).json({
 //       config.REFRESH_TOKEN_SECRET,
 //       { expiresIn: "7d" },
 //     );
-
-    
 
 //     // session.refreshTokenHash = newRefreshTokenHash;
 //     // await session.save();
@@ -209,32 +206,32 @@ export async function login(req, res) {
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!normalizedEmail || !password) {
-      return res.status(400).json({ 
-  error: true, 
-  type: "VALIDATION_ERROR", 
-  message: "All fields are required" 
-});
+      return res.status(400).json({
+        error: true,
+        type: "VALIDATION_ERROR",
+        message: "All fields are required",
+      });
     }
 
     const user = await userModel.findOne({ email: normalizedEmail });
 
     if (!user) {
-        return res.status(404).json({ 
-  error: true, 
-  type: "NOT_FOUND_ERROR", 
-  message: "Invalid credentials" 
-});
+      return res.status(404).json({
+        error: true,
+        type: "NOT_FOUND_ERROR",
+        message: "Invalid credentials",
+      });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
 
-if (!isValidPassword) {
-  return res.status(401).json({
-    error: true,
-    type: "INVALID_CREDENTIALS",
-    message: "Invalid credentials"
-  });
-}
+    if (!isValidPassword) {
+      return res.status(401).json({
+        error: true,
+        type: "INVALID_CREDENTIALS",
+        message: "Invalid credentials",
+      });
+    }
     // const activeSessionsCount = await sessionModel.countDocuments({
     //   user: user._id,
     //   revoked: false,
@@ -280,8 +277,8 @@ if (!isValidPassword) {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: false, //now only for dev it is false, but it always true in production
-      // sameSite: "strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -297,11 +294,11 @@ if (!isValidPassword) {
     });
   } catch (error) {
     console.error("Login error:", error);
-return res.status(500).json({
-  error: true,
-  type: "SERVER_ERROR",
-  message: "Internal server error"
-});
+    return res.status(500).json({
+      error: true,
+      type: "SERVER_ERROR",
+      message: "Internal server error",
+    });
   }
 }
 
@@ -313,12 +310,11 @@ export async function logOut(req, res) {
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    return res.status(400).json({ 
-  error: true, 
-  type: "VALIDATION_ERROR", 
-  message: "Access token is not found" 
-});
-    
+    return res.status(400).json({
+      error: true,
+      type: "VALIDATION_ERROR",
+      message: "Access token is not found",
+    });
   }
 
   // const hashedRefrshToken = crypto
@@ -342,15 +338,13 @@ export async function logOut(req, res) {
 
   res.clearCookie("accessToken", {
     httpOnly: true,
-    // secure: true,       // always true in production
-    // sameSite: "strict", // adjust if cross-domain
+    secure: true, // always true in production
+    sameSite: "strict", // adjust if cross-domain
   });
-
-
 
   return res.status(200).json({
     success: true,
-    type: "LOGOUT_SUCCESS",   
+    type: "LOGOUT_SUCCESS",
     message: "Logged out successfully !",
   });
 }
