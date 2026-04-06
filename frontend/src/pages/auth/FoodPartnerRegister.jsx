@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 const FoodPartnerRegister = () => {
   const {
@@ -14,30 +15,29 @@ const FoodPartnerRegister = () => {
     formState: { errors },
   } = useForm();
 
-  const selectedAvatar = watch('avatar')
-  const selectedFileName = selectedAvatar?.[0]?.name || ''
+  const selectedAvatar = watch("avatar");
+  const selectedFileName = selectedAvatar?.[0]?.name || "";
 
   const navigate = useNavigate();
 
   const onSubmit = async () => {
-
-    const formData = new FormData()
-    formData.append('restaurantName', watch('restaurantName'))
-    formData.append('email', watch('email'))
-    formData.append('phoneNumber', watch('phoneNumber'))
-    formData.append('address', watch('address'))
-    formData.append('password', watch('password'))
-    formData.append('avatar', selectedAvatar[0])
+    const formData = new FormData();
+    formData.append("restaurantName", watch("restaurantName"));
+    formData.append("email", watch("email"));
+    formData.append("phoneNumber", watch("phoneNumber"));
+    formData.append("address", watch("address"));
+    formData.append("password", watch("password"));
+    formData.append("avatar", selectedAvatar[0]);
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/food-partner/register",
+        `${API}/api/auth/food-partner/register`,
         formData,
         {
           withCredentials: true,
         },
       );
-      
+
       // redirect after successful registration
       navigate("/create-food-post");
       toast.success(
@@ -46,10 +46,10 @@ const FoodPartnerRegister = () => {
     } catch (err) {
       console.error("Registration error:", err);
       if (err.response?.data?.message) {
-  toast.error(err.response.data.message);
-} else {
-  toast.error("Registration failed. Please try again.");
-}
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
     }
   };
 
@@ -105,36 +105,47 @@ const FoodPartnerRegister = () => {
               )}
             </div>
 
-              <div className="form-group">
-            <label htmlFor="videoFile">Upload Avatar</label>
-            <div className={`file-upload ${errors.avatar ? 'file-upload-error' : ''}`}>
-              <input
-                id="avatarFile"
-                name="avatar"
-                type="file"
-                accept="image/*"
-                {...register('avatar', {
-                  required: 'Please upload an avatar.',
-                })}
-              />
-              <label htmlFor="avatarFile" className="file-upload-button">
-                <span className="file-upload-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 3v12" />
-                    <path d="M8 11l4 4 4-4" />
-                    <path d="M5 19h14" />
-                  </svg>
-                </span>
+            <div className="form-group">
+              <label htmlFor="videoFile">Upload Avatar</label>
+              <div
+                className={`file-upload ${errors.avatar ? "file-upload-error" : ""}`}
+              >
+                <input
+                  id="avatarFile"
+                  name="avatar"
+                  type="file"
+                  accept="image/*"
+                  {...register("avatar", {
+                    required: "Please upload an avatar.",
+                  })}
+                />
+                <label htmlFor="avatarFile" className="file-upload-button">
+                  <span className="file-upload-icon">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3v12" />
+                      <path d="M8 11l4 4 4-4" />
+                      <path d="M5 19h14" />
+                    </svg>
+                  </span>
                   <span className="file-upload-text">
-                  {selectedFileName || 'Choose an image'}
+                    {selectedFileName || "Choose an image"}
+                  </span>
+                  <span className="file-upload-action">Browse</span>
+                </label>
+              </div>
+              {errors.partnerAvatar && (
+                <span className="error-message">
+                  {errors.partnerAvatar.message}
                 </span>
-                <span className="file-upload-action">Browse</span>
-              </label>
+              )}
             </div>
-            {errors.partnerAvatar && (
-              <span className="error-message">{errors.partnerAvatar.message}</span>
-            )}
-          </div>
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email">Email Address</label>

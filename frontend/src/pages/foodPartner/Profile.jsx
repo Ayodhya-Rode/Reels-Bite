@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link, useParams } from 'react-router-dom'
-
+const API = import.meta.env.VITE_API_URL;
 
 
 const Profile = () => {
@@ -11,7 +11,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/auth/food-partner/${id}`,{withCredentials: true})
+        const response = await axios.get(`${API}/api/auth/food-partner/${id}`,{withCredentials: true})
                         
         setProfileData(response.data.foodPartner)
         setVideos(response.data?.foodPartner?.foodItems || [])

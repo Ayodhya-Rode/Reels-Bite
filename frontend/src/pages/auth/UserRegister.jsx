@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 const UserRegister = () => {
   const {
@@ -17,23 +18,18 @@ const UserRegister = () => {
 
   const onSubmit = async (data) => {
     try {
-        // const formData = new FormData()
+      // const formData = new FormData()
 
-        // formData.append("fullName", data.fullName)
-        // formData.append("email", data.email)
-        // formData.append("phoneNumber", data.phoneNumber)
-        // formData.append("password", data.password)
+      // formData.append("fullName", data.fullName)
+      // formData.append("email", data.email)
+      // formData.append("phoneNumber", data.phoneNumber)
+      // formData.append("password", data.password)
 
-        // // 🔥 file handling
-        // formData.append("profilePic", data.profilePic[0])
-      const res = await axios.post(
-        "http://localhost:3000/api/auth/user/register",
-         data,
-        {
-          withCredentials: true,
-
-        },
-      );
+      // // 🔥 file handling
+      // formData.append("profilePic", data.profilePic[0])
+      const res = await axios.post(`${API}/api/auth/user/register`, data, {
+        withCredentials: true,
+      });
 
       console.log("res data ", res.data);
 
@@ -44,10 +40,10 @@ const UserRegister = () => {
     } catch (err) {
       console.error("Registration error:", err);
       if (err.response?.data?.message) {
-  toast.error(err.response.data.message);
-} else {
-  toast.error("Registration failed. Please try again.");
-}
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
     }
   };
 
@@ -83,7 +79,7 @@ const UserRegister = () => {
 
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
             {/* Full Name Field */}
-            
+
             <div className="form-group">
               <label htmlFor="fullName">Full Name</label>
               <input

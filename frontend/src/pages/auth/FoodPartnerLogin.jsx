@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+const API = import.meta.env.VITE_API_URL;
 
 const FoodPartnerLogin = () => {
   const {
@@ -18,7 +19,7 @@ const FoodPartnerLogin = () => {
   const onSubmit = async (data) => {
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/food-partner/login",
+        `${API}/api/auth/food-partner/login`,
         data,
         {
           withCredentials: true,

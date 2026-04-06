@@ -3,6 +3,7 @@ import '../../styles/actionButtons.css'
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
+const API = import.meta.env.VITE_API_URL;
 
 const Home = () => {
   const [videos, setVideos] = useState([])
@@ -15,7 +16,7 @@ const Home = () => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/food', {
+        const res = await axios.get(`${API}/api/food`, {
           withCredentials: true,
         })
 
@@ -90,7 +91,7 @@ const Home = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:3000/api/food/like',
+        `${API}/api/food/like`,
         { foodId: id },
         { withCredentials: true }
       )
@@ -120,7 +121,7 @@ const Home = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:3000/api/food/save',
+          `${API}/api/food/save`,
         { foodId: id },
         { withCredentials: true }
       )

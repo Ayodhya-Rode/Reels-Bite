@@ -5,8 +5,7 @@ import '../../styles/theme.css'
 import './CreateFoodPost.css'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { useParams } from 'react-router-dom'
-
+const API = import.meta.env.VITE_API_URL;
 
 const CreateFoodPost = () => {
   const navigate = useNavigate()  
@@ -19,14 +18,11 @@ const CreateFoodPost = () => {
   
   const [profileData, setProfileData] = useState(null)
   
-  // const { id } = useParams()
-  // console.log(id);
-  
   useEffect(() => {
   const fetchProfileData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/auth/me",
+        `${API}/api/auth/me`,
         { withCredentials: true }
       )
 

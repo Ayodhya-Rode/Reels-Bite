@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+const API = import.meta.env.VITE_API_URL;
 
 const UserLogin = () => {
   const {
@@ -17,13 +18,9 @@ const UserLogin = () => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/auth/user/login",
-        data,
-        {
-          withCredentials: true,
-        },
-      );
+      const res = await axios.post(`${API}/api/auth/user/login`, data, {
+        withCredentials: true,
+      });
 
       console.log("res data ", res.data);
       toast.success(res.data.message || "Login successful ✅");
@@ -32,10 +29,10 @@ const UserLogin = () => {
     } catch (err) {
       console.error("Login error:", err);
       if (err.response?.data?.message) {
-  toast.error(err.response.data.message);
-} else {
-  toast.error("Login failed. Please try again.");
-}
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
     }
   };
 
