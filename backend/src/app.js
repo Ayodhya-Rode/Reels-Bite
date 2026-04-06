@@ -11,9 +11,10 @@ import cors from "cors"
 const app = express();
 
 app.use(cors({
-  origin: "https://reelsbite.netlify.app/",
+  origin: "https://reels-bite-4.onrender.com",
   credentials: true
 }));
+
   
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
